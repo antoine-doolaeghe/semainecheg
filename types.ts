@@ -44,4 +44,11 @@ export interface UserPreferences {
   numberOfMeals: number;
 }
 
-export type ViewState = 'onboarding' | 'planning' | 'groceries';
+export type ViewState = 'onboarding' | 'planning' | 'groceries' | 'history';
+
+export interface SavedMealPlan {
+  id: string;
+  createdAt: string;
+  preferences: UserPreferences;
+  recipes: Recipe[];
+}
