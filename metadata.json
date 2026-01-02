@@ -1,0 +1,5 @@
+{
+  "name": "SemaineChef",
+  "description": "A smart meal planner that generates 7-day dinner menus and consolidated grocery lists tailored to your preferences and pantry.",
+  "requestFramePermissions": []
+}
