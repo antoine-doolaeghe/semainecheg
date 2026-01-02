@@ -36,16 +36,7 @@ export const MealPlanView: React.FC<MealPlanViewProps> = ({ plan, onSelectRecipe
             onClick={() => onSelectRecipe(recipe)}
             className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 active:scale-[0.98] transition-transform cursor-pointer relative group overflow-hidden"
           >
-            <div className="flex gap-4">
-               {/* Image Placeholder - dynamic based on day to vary it slightly */}
-              <div className="w-24 h-24 shrink-0 rounded-xl overflow-hidden bg-slate-200">
-                <img 
-                  src={`https://picsum.photos/seed/${recipe.id}/200/200`} 
-                  alt={recipe.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-              </div>
-
+            <div className="flex flex-col gap-3">
               <div className="flex-1 flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-start">

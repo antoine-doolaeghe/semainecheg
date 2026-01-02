@@ -19,20 +19,15 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, onClose }) => 
       
       <div className="bg-white w-full max-w-2xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col relative animate-in zoom-in-95 duration-200">
         
-        {/* Header Image */}
-        <div className="h-48 sm:h-64 relative shrink-0">
-          <img 
-            src={`https://picsum.photos/seed/${recipe.id}/800/400`} 
-            className="w-full h-full object-cover"
-            alt={recipe.name}
-          />
+        {/* Header */}
+        <div className="relative shrink-0 bg-gradient-to-br from-emerald-500 to-emerald-600 p-6">
           <button 
             onClick={onClose}
             className="absolute top-4 right-4 p-2 bg-white/90 rounded-full text-slate-900 hover:bg-white transition-colors shadow-lg"
           >
             <X size={20} />
           </button>
-          <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-6 pt-12">
+          <div className="pt-8">
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">{recipe.name}</h2>
             <div className="flex gap-4 text-white/90 text-sm font-medium">
               <span className="flex items-center gap-1.5"><Clock size={16}/> {recipe.totalTimeMinutes} min</span>
