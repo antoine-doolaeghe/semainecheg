@@ -6,6 +6,12 @@
 
 Planifiez vos repas de la semaine avec l'IA. Une application qui génère des plans de repas personnalisés selon vos objectifs (sportif, équilibré, etc.), votre niveau de cuisine et vos restrictions alimentaires.
 
+## ✨ Nouveauté : Persistance Ultra-Longue
+
+Vos recettes sont maintenant sauvegardées dans des **cookies avec une durée de vie de 10 ans** ! Plus besoin de craindre la perte de vos plannings lors du vidage du cache. 
+
+🔗 [Guide de démarrage rapide](QUICKSTART.md) | [Documentation complète](SUMMARY.md)
+
 ## 🚀 Run Locally
 
 **Prerequisites:** Node.js 18+
@@ -60,6 +66,7 @@ Planifiez vos repas de la semaine avec l'IA. Une application qui génère des pl
 - **Styling:** Tailwind CSS
 - **Icons:** Lucide React
 - **AI:** Google Gemini API
+- **Storage:** Persistent Cookies (10 years) + localStorage fallback
 
 ## 📁 Project Structure
 
@@ -71,15 +78,30 @@ semainechef/
 ├── components/
 │   ├── Button.tsx
 │   ├── GroceryList.tsx
+│   ├── History.tsx
 │   ├── Input.tsx
 │   ├── MealPlanView.tsx
 │   ├── Onboarding.tsx
-│   └── RecipeModal.tsx
+│   ├── RecipeModal.tsx
+│   └── StorageDebugger.tsx  # 🆕 Storage debugger (dev only)
 ├── services/
-│   └── geminiService.ts # Gemini API integration
+│   ├── geminiService.ts     # Gemini API integration
+│   ├── cookieService.ts     # 🆕 Persistent cookies service
+│   └── COOKIES_README.md    # 🆕 Technical documentation
 ├── vercel.json          # Vercel configuration
 └── vite.config.ts       # Vite configuration
 ```
+
+## 🍪 Persistent Storage
+
+This app uses a sophisticated cookie-based storage system with:
+- **10-year persistence** (maximum allowed)
+- **Automatic chunking** for large data
+- **localStorage fallback** for redundancy
+- **Automatic migration** from old localStorage data
+- **Debug interface** in development mode
+
+📖 Read more: [SUMMARY.md](SUMMARY.md) | [QUICKSTART.md](QUICKSTART.md)
 
 ## 📝 License
 

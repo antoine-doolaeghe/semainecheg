@@ -1,26 +1,22 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Recipe } from '../types';
-import { Clock, ChevronRight, RefreshCw, Eye } from 'lucide-react';
-import { Button } from './Button';
+import { Clock, ChevronRight, Heart } from 'lucide-react';
 
 interface MealPlanViewProps {
   plan: Recipe[];
   onSelectRecipe: (recipe: Recipe) => void;
-  onRegenerateDay: (dayNumber: number) => Promise<void>;
+  onToggleFavorite: (recipe: Recipe) => void;
+  favorites: Recipe[];
 }
 
-export const MealPlanView: React.FC<MealPlanViewProps> = ({ plan, onSelectRecipe, onRegenerateDay }) => {
-  const [loadingDay, setLoadingDay] = useState<number | null>(null);
-
-  const handleRegenerate = async (e: React.MouseEvent, dayNumber: number) => {
-    e.stopPropagation();
-    setLoadingDay(dayNumber);
-    try {
-      await onRegenerateDay(dayNumber);
-    } finally {
-      setLoadingDay(null);
-    }
-  };
+export const MealPlanView: React.FC<MealPlanViewProps> = ({ 
+  plan, 
+  onSelectRecipe,
+  onToggleFavorite,
+  favorites
+}) => {
+  const isFavorite = (recipe: Recipe) => 
+    favorites.some(f => f.id === recipe.id || f.name === recipe.name);
 
   return (
     <div className="pb-24 animate-in slide-in-from-bottom-4 duration-500">
@@ -33,10 +29,9 @@ export const MealPlanView: React.FC<MealPlanViewProps> = ({ plan, onSelectRecipe
         {plan.map((recipe) => (
           <div 
             key={recipe.id}
-            onClick={() => onSelectRecipe(recipe)}
             className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 active:scale-[0.98] transition-transform cursor-pointer relative group overflow-hidden"
           >
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3" onClick={() => onSelectRecipe(recipe)}>
               <div className="flex-1 flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-start">
@@ -63,21 +58,22 @@ export const MealPlanView: React.FC<MealPlanViewProps> = ({ plan, onSelectRecipe
                    <p className="text-xs text-slate-500 line-clamp-1">
                     {recipe.ingredients.length} ingrédients
                    </p>
-                   <button 
-                    onClick={(e) => handleRegenerate(e, recipe.dayNumber)}
-                    disabled={loadingDay === recipe.dayNumber}
-                    className="p-2 -m-2 text-slate-300 hover:text-emerald-600 transition-colors"
-                    title="Changer cette recette"
-                   >
-                     {loadingDay === recipe.dayNumber ? (
-                       <RefreshCw size={18} className="animate-spin text-emerald-600" />
-                     ) : (
-                       <RefreshCw size={18} />
-                     )}
-                   </button>
                 </div>
               </div>
             </div>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFavorite(recipe);
+              }}
+              className="absolute right-3 bottom-3 p-2 rounded-full hover:bg-slate-50 transition-colors z-20"
+            >
+              <Heart 
+                size={20} 
+                className={isFavorite(recipe) ? "text-rose-500 fill-rose-500" : "text-slate-300"} 
+              />
+            </button>
             
             <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity hidden md:block">
               <ChevronRight className="text-slate-300" />

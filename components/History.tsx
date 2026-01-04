@@ -1,20 +1,26 @@
 import React from 'react';
 import { SavedMealPlan, Recipe } from '../types';
-import { Clock, ChefHat, Trash2, Calendar, ChevronRight } from 'lucide-react';
+import { Clock, ChefHat, Trash2, Calendar, ChevronRight, Heart } from 'lucide-react';
 
 interface HistoryProps {
   history: SavedMealPlan[];
   onLoadPlan: (plan: SavedMealPlan) => void;
   onDeletePlan: (planId: string) => void;
   onSelectRecipe: (recipe: Recipe) => void;
+  favorites: Recipe[];
+  onToggleFavorite: (recipe: Recipe) => void;
 }
 
 export const History: React.FC<HistoryProps> = ({ 
   history, 
   onLoadPlan, 
   onDeletePlan,
-  onSelectRecipe 
+  onSelectRecipe,
+  favorites,
+  onToggleFavorite
 }) => {
+  const isFavorite = (recipe: Recipe) => 
+    favorites.some(f => f.id === recipe.id || f.name === recipe.name);
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-FR', { 
@@ -111,23 +117,33 @@ export const History: React.FC<HistoryProps> = ({
             {/* Recipe previews */}
             <div className="p-3 space-y-2">
               {savedPlan.recipes.slice(0, 3).map((recipe) => (
-                <button
-                  key={recipe.id}
-                  onClick={() => onSelectRecipe(recipe)}
-                  className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors text-left"
-                >
-                  <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center shrink-0">
-                    <ChefHat size={16} className="text-emerald-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-900 truncate">
-                      {recipe.name}
-                    </p>
-                    <p className="text-xs text-slate-500 flex items-center gap-1">
-                      <Clock size={10} /> {recipe.totalTimeMinutes} min
-                    </p>
-                  </div>
-                </button>
+                <div key={recipe.id} className="group relative">
+                  <button
+                    onClick={() => onSelectRecipe(recipe)}
+                    className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors text-left pr-10"
+                  >
+                    <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center shrink-0">
+                      <ChefHat size={16} className="text-emerald-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-slate-900 truncate">
+                        {recipe.name}
+                      </p>
+                      <p className="text-xs text-slate-500 flex items-center gap-1">
+                        <Clock size={10} /> {recipe.totalTimeMinutes} min
+                      </p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => onToggleFavorite(recipe)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-white transition-colors z-10"
+                  >
+                    <Heart 
+                      size={14} 
+                      className={isFavorite(recipe) ? "text-rose-500 fill-rose-500" : "text-slate-300"} 
+                    />
+                  </button>
+                </div>
               ))}
               
               {savedPlan.recipes.length > 3 && (
@@ -142,4 +158,5 @@ export const History: React.FC<HistoryProps> = ({
     </div>
   );
 };
+
 

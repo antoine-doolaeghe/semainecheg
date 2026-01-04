@@ -37,14 +37,14 @@ export interface Recipe {
 export type MealPlan = Recipe[];
 
 export interface UserPreferences {
-  goal: 'balanced' | 'quick' | 'cheap' | 'sport' | 'vegetarian';
+  goal: 'balanced' | 'quick' | 'cheap' | 'sport';
   restrictions: string;
   cookingLevel: 'beginner' | 'intermediate';
   pantryItems: string;
   numberOfMeals: number;
 }
 
-export type ViewState = 'onboarding' | 'planning' | 'groceries' | 'history';
+export type ViewState = 'onboarding' | 'planning' | 'groceries' | 'history' | 'favorites';
 
 export interface SavedMealPlan {
   id: string;

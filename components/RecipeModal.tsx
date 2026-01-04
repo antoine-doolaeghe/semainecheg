@@ -1,14 +1,84 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Recipe } from '../types';
-import { X, Clock, Users, ChefHat } from 'lucide-react';
+import { X, Clock, Users, ChefHat, Copy, Share2, Check, Heart } from 'lucide-react';
 
 interface RecipeModalProps {
   recipe: Recipe | null;
   onClose: () => void;
+  onToggleFavorite?: (recipe: Recipe) => void;
+  isFavorite?: boolean;
 }
 
-export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, onClose }) => {
+const formatRecipeAsText = (recipe: Recipe): string => {
+  let text = `🍽️ ${recipe.name}\n`;
+  text += `⏱️ ${recipe.totalTimeMinutes} min | 👥 2 personnes\n\n`;
+  
+  if (recipe.macros) {
+    text += `📊 Nutrition: ${recipe.macros.calories} kcal | ${recipe.macros.protein}g protéines | ${recipe.macros.carbs}g glucides | ${recipe.macros.fat}g lipides\n\n`;
+  }
+  
+  text += `📝 INGRÉDIENTS\n`;
+  recipe.ingredients.forEach(ing => {
+    text += `• ${ing.name}: ${ing.quantity} ${ing.unit}\n`;
+  });
+  
+  text += `\n👨‍🍳 PRÉPARATION\n`;
+  recipe.steps.forEach((step, idx) => {
+    text += `${idx + 1}. ${step}\n`;
+  });
+  
+  if (recipe.tips) {
+    text += `\n💡 Conseil: ${recipe.tips}\n`;
+  }
+  
+  text += `\n---\nGénéré par SemaineChef 🥗`;
+  
+  return text;
+};
+
+export const RecipeModal: React.FC<RecipeModalProps> = ({ 
+  recipe, 
+  onClose,
+  onToggleFavorite,
+  isFavorite = false
+}) => {
+  const [copied, setCopied] = useState(false);
+  const [shared, setShared] = useState(false);
+
   if (!recipe) return null;
+
+  const recipeText = formatRecipeAsText(recipe);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(recipeText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: recipe.name,
+          text: recipeText,
+        });
+        setShared(true);
+        setTimeout(() => setShared(false), 2000);
+      } catch (err) {
+        // User cancelled or error
+        if ((err as Error).name !== 'AbortError') {
+          console.error('Failed to share:', err);
+        }
+      }
+    } else {
+      // Fallback to copy if share not available
+      handleCopy();
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
@@ -21,14 +91,39 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, onClose }) => 
         
         {/* Header */}
         <div className="relative shrink-0 bg-gradient-to-br from-emerald-500 to-emerald-600 p-6">
-          <button 
-            onClick={onClose}
-            className="absolute top-4 right-4 p-2 bg-white/90 rounded-full text-slate-900 hover:bg-white transition-colors shadow-lg"
-          >
-            <X size={20} />
-          </button>
+          <div className="absolute top-4 right-4 flex gap-2">
+            {onToggleFavorite && (
+              <button 
+                onClick={() => onToggleFavorite(recipe)}
+                className={`p-2 rounded-full transition-colors shadow-lg ${isFavorite ? 'bg-rose-500 text-white' : 'bg-white/90 text-slate-900 hover:bg-white'}`}
+                title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+              >
+                <Heart size={20} fill={isFavorite ? "currentColor" : "none"} />
+              </button>
+            )}
+            <button 
+              onClick={handleCopy}
+              className="p-2 bg-white/90 rounded-full text-slate-900 hover:bg-white transition-colors shadow-lg"
+              title="Copier la recette"
+            >
+              {copied ? <Check size={20} className="text-emerald-600" /> : <Copy size={20} />}
+            </button>
+            <button 
+              onClick={handleShare}
+              className="p-2 bg-white/90 rounded-full text-slate-900 hover:bg-white transition-colors shadow-lg"
+              title="Partager la recette"
+            >
+              {shared ? <Check size={20} className="text-emerald-600" /> : <Share2 size={20} />}
+            </button>
+            <button 
+              onClick={onClose}
+              className="p-2 bg-white/90 rounded-full text-slate-900 hover:bg-white transition-colors shadow-lg"
+            >
+              <X size={20} />
+            </button>
+          </div>
           <div className="pt-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">{recipe.name}</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2 pr-28">{recipe.name}</h2>
             <div className="flex gap-4 text-white/90 text-sm font-medium">
               <span className="flex items-center gap-1.5"><Clock size={16}/> {recipe.totalTimeMinutes} min</span>
               <span className="flex items-center gap-1.5"><Users size={16}/> 2 pers.</span>

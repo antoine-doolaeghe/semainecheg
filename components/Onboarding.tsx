@@ -11,10 +11,9 @@ interface OnboardingProps {
 
 const GOALS = [
   { id: 'balanced', label: 'Équilibré', icon: Leaf },
-  { id: 'quick', label: 'Rapide', icon: Clock },
+  { id: 'sport', label: 'Sportif', icon: Dumbbell },
   { id: 'cheap', label: 'Économique', icon: DollarSign },
-  { id: 'sport', label: 'Sport / Running', icon: Dumbbell },
-  { id: 'vegetarian', label: 'Végétarien', icon: TrendingUp },
+  { id: 'quick', label: 'Rapide', icon: Clock },
 ] as const;
 
 export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, isLoading }) => {

@@ -4,11 +4,16 @@ import { MealPlanView } from './components/MealPlanView';
 import { GroceryList } from './components/GroceryList';
 import { RecipeModal } from './components/RecipeModal';
 import { History } from './components/History';
+import { StorageDebugger } from './components/StorageDebugger';
 import { Recipe, UserPreferences, ViewState, SavedMealPlan } from './types';
-import { generateWeeklyPlan, regenerateSingleRecipe } from './services/geminiService';
-import { Calendar, ShoppingBag, History as HistoryIcon } from 'lucide-react';
+import { generateWeeklyPlan } from './services/geminiService';
+import { PersistentStorage } from './services/cookieService';
+import { Calendar, ShoppingBag, History as HistoryIcon, Heart } from 'lucide-react';
+import { Favorites } from './components/Favorites';
 
 const HISTORY_KEY = 'semainechef_history';
+const FAVORITES_KEY = 'semainechef_favorites';
+const IS_DEVELOPMENT = import.meta.env.DEV;
 
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState>('onboarding');
@@ -17,27 +22,49 @@ const App: React.FC = () => {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [history, setHistory] = useState<SavedMealPlan[]>([]);
+  const [favorites, setFavorites] = useState<Recipe[]>([]);
 
-  // Load history from localStorage on mount
+  // Load history and favorites from persistent storage on mount
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(HISTORY_KEY);
-      if (saved) {
-        setHistory(JSON.parse(saved));
-      }
+      const savedHistory = PersistentStorage.get(HISTORY_KEY);
+      if (savedHistory) setHistory(savedHistory);
+      
+      const savedFavorites = PersistentStorage.get(FAVORITES_KEY);
+      if (savedFavorites) setFavorites(savedFavorites);
+      
+      console.log('✅ Données chargées depuis le stockage persistant');
     } catch (e) {
-      console.error('Failed to load history:', e);
+      console.error('Échec du chargement des données:', e);
     }
   }, []);
 
-  // Save history to localStorage whenever it changes
+  // Save history whenever it changes
   useEffect(() => {
-    try {
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-    } catch (e) {
-      console.error('Failed to save history:', e);
-    }
+    PersistentStorage.set(HISTORY_KEY, history);
   }, [history]);
+
+  // Save favorites whenever they change
+  useEffect(() => {
+    PersistentStorage.set(FAVORITES_KEY, favorites);
+  }, [favorites]);
+
+  const toggleFavorite = (recipe: Recipe) => {
+    setFavorites(prev => {
+      const isFav = prev.some(r => r.id === recipe.id || r.name === recipe.name);
+      if (isFav) {
+        return prev.filter(r => r.id !== recipe.id && r.name !== recipe.name);
+      }
+      return [recipe, ...prev];
+    });
+  };
+
+  const replaceWithFavorite = (dayNumber: number, favoriteRecipe: Recipe) => {
+    setPlan(prev => prev.map(r => 
+      r.dayNumber === dayNumber ? { ...favoriteRecipe, dayNumber } : r
+    ));
+    setView('planning');
+  };
 
   const savePlanToHistory = (preferences: UserPreferences, recipes: Recipe[]) => {
     const newPlan: SavedMealPlan = {
@@ -61,16 +88,6 @@ const App: React.FC = () => {
       alert("Une erreur est survenue lors de la génération. Veuillez réessayer.");
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  const handleRegenerateDay = async (dayNumber: number) => {
-    if (!prefs) return;
-    try {
-      const newRecipe = await regenerateSingleRecipe(prefs, dayNumber);
-      setPlan(prev => prev.map(r => r.dayNumber === dayNumber ? newRecipe : r));
-    } catch (error) {
-      alert("Impossible de régénérer ce jour.");
     }
   };
 
@@ -125,6 +142,21 @@ const App: React.FC = () => {
               </span>
             )}
           </button>
+
+          <div className="w-px h-8 bg-slate-100"></div>
+
+          <button 
+            onClick={() => setView('favorites')}
+            className={`flex flex-col items-center p-2 rounded-xl transition-all relative ${view === 'favorites' ? 'text-emerald-600' : 'text-slate-400 hover:text-slate-600'}`}
+          >
+            <Heart size={24} strokeWidth={view === 'favorites' ? 2.5 : 2} />
+            <span className="text-[10px] font-medium mt-1">Favoris</span>
+            {favorites.length > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                {favorites.length > 9 ? '9+' : favorites.length}
+              </span>
+            )}
+          </button>
         </div>
       </div>
     );
@@ -142,7 +174,8 @@ const App: React.FC = () => {
           <MealPlanView 
             plan={plan} 
             onSelectRecipe={setSelectedRecipe}
-            onRegenerateDay={handleRegenerateDay}
+            onToggleFavorite={toggleFavorite}
+            favorites={favorites}
           />
         )}
 
@@ -156,16 +189,41 @@ const App: React.FC = () => {
             onLoadPlan={handleLoadPlan}
             onDeletePlan={handleDeletePlan}
             onSelectRecipe={setSelectedRecipe}
+            favorites={favorites}
+            onToggleFavorite={toggleFavorite}
+          />
+        )}
+
+        {view === 'favorites' && (
+          <Favorites
+            favorites={favorites}
+            onSelectRecipe={setSelectedRecipe}
+            onToggleFavorite={toggleFavorite}
+            onReplaceInPlan={(recipe) => {
+              const day = prompt("Sur quel jour (1-7) voulez-vous ajouter cette recette ?", "1");
+              if (day) {
+                const dayNum = parseInt(day);
+                if (dayNum >= 1 && dayNum <= 7) {
+                  replaceWithFavorite(dayNum, recipe);
+                }
+              }
+            }}
+            isPlanActive={plan.length > 0}
           />
         )}
 
         {/* Modal handles its own state for simplicity here, controlled by App */}
         <RecipeModal 
           recipe={selectedRecipe} 
-          onClose={() => setSelectedRecipe(null)} 
+          onClose={() => setSelectedRecipe(null)}
+          onToggleFavorite={toggleFavorite}
+          isFavorite={selectedRecipe ? favorites.some(f => f.id === selectedRecipe.id || f.name === selectedRecipe.name) : false}
         />
 
         {renderBottomNav()}
+        
+        {/* Storage Debugger - uniquement en développement */}
+        {IS_DEVELOPMENT && <StorageDebugger />}
         
       </main>
     </div>
